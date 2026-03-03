@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'">
+<title>datame v1.0</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080810;--surface:#0f0f1a;--surface2:#13131f;
+  --border:#1e1e35;--border2:#252538;
+  --accent:#3478f6;--text:#e0e0f0;--muted:#555;--muted2:#888;
+  --green:#50c878;--orange:#f5a623;--red:#e74c3c;--purple:#a855f7;
+}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;display:flex;flex-direction:column;height:100vh}
+
+/* ── TITLEBAR ── */
+.titlebar{
+  -webkit-app-region:drag;height:52px;display:flex;align-items:center;
+  padding:0 16px 0 78px;border-bottom:1px solid var(--border);flex-shrink:0;gap:12px;
+  background:rgba(8,8,16,0.95);backdrop-filter:blur(10px);
+}
+.logo{font-size:1rem;font-weight:800;letter-spacing:-0.5px}
+.logo span{color:var(--accent)}
+.titlebar-pct{font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--muted)}
+.titlebar-pct strong{color:var(--green)}
+.titlebar-actions{-webkit-app-region:no-drag;margin-left:auto;display:flex;gap:8px}
+.tbtn{
+  padding:6px 14px;border:1px solid var(--border2);border-radius:8px;
+  background:transparent;color:var(--muted2);font-family:'Syne',sans-serif;
+  font-size:0.75rem;cursor:pointer;transition:all 0.15s;white-space:nowrap;
+}
+.tbtn:hover{background:var(--surface2);color:var(--text);border-color:var(--accent)}
+.tbtn.primary{background:var(--accent);border-color:var(--accent);color:white}
+.tbtn.primary:hover{background:#2a62c9}
+
+/* ── LAYOUT ── */
+.main{display:flex;flex:1;overflow:hidden}
+
+/* ── SIDEBAR ── */
+.sidebar{width:220px;border-right:1px solid var(--border);overflow-y:auto;padding:12px 8px;flex-shrink:0;background:var(--surface)}
+.sidebar::-webkit-scrollbar{width:3px}
+.sidebar::-webkit-scrollbar-thumb{background:#222;border-radius:4px}
+.sidebar-section{font-size:0.6rem;text-transform:uppercase;letter-spacing:2px;
+  color:var(--muted);font-family:'JetBrains Mono',monospace;padding:10px 10px 6px;margin-top:4px}
+.nav-btn{
+  width:100%;display:flex;align-items:center;gap:9px;padding:9px 10px;
+  border:none;background:transparent;color:var(--muted2);border-radius:8px;
+  cursor:pointer;text-align:left;font-family:'Syne',sans-serif;font-size:0.82rem;
+  transition:all 0.12s;margin-bottom:1px;
+}
+.nav-btn:hover{background:var(--surface2);color:var(--text)}
+.nav-btn.active{background:rgba(52,120,246,0.15);color:white;font-weight:600}
+.nav-icon{font-size:1rem;flex-shrink:0;width:20px;text-align:center}
+.nav-label{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nav-pct{font-family:'JetBrains Mono',monospace;font-size:0.65rem}
+.nav-badge{
+  background:var(--red);color:white;font-size:0.58rem;
+  font-family:'JetBrains Mono',monospace;padding:1px 5px;border-radius:8px;min-width:16px;text-align:center;
+}
+.add-cat-btn{
+  width:100%;display:flex;align-items:center;gap:8px;padding:8px 10px;
+  border:1px dashed var(--border2);background:transparent;color:var(--muted);
+  border-radius:8px;cursor:pointer;font-family:'Syne',sans-serif;font-size:0.78rem;
+  transition:all 0.15s;margin-top:6px;
+}
+.add-cat-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ── CONTENT ── */
+.content{flex:1;overflow-y:auto;padding:28px 32px;background:var(--bg)}
+.content::-webkit-scrollbar{width:4px}
+.content::-webkit-scrollbar-thumb{background:#222;border-radius:4px}
+
+/* page header */
+.page-header{display:flex;align-items:center;gap:14px;margin-bottom:8px}
+.page-icon{font-size:2rem}
+.page-title{font-size:1.5rem;font-weight:800}
+.page-pct{margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:0.8rem;color:var(--muted)}
+.page-bar{height:3px;background:var(--border);border-radius:100px;margin-bottom:28px;overflow:hidden}
+.page-bar-fill{height:100%;border-radius:100px;transition:width 0.8s ease}
+
+/* fields grid */
+.fields-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.field-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:15px;transition:border-color 0.15s}
+.field-card:hover{border-color:var(--border2)}
+.field-top{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.lamp{width:7px;height:7px;border-radius:50%;flex-shrink:0;transition:all 0.3s}
+.lamp.on{background:var(--green);box-shadow:0 0 6px var(--green),0 0 12px rgba(80,200,120,0.3)}
+.lamp.off{background:#252535}
+.field-label{font-size:0.72rem;color:var(--muted);font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.5px;flex:1}
+.field-input{
+  width:100%;background:#0a0a14;border:1px solid var(--border);border-radius:6px;
+  padding:8px 10px;color:var(--text);font-family:'Syne',sans-serif;font-size:0.83rem;
+  resize:none;transition:border-color 0.15s;min-height:58px;
+}
+.field-input:focus{outline:none;border-color:var(--accent)}
+.field-input::placeholder{color:#2a2a3a}
+.field-actions{display:flex;gap:6px;margin-top:8px;opacity:0;transition:opacity 0.15s}
+.field-card:focus-within .field-actions{opacity:1}
+.save-btn{padding:4px 12px;background:var(--accent);border:none;border-radius:5px;color:white;font-size:0.7rem;font-family:'Syne',sans-serif;cursor:pointer}
+.save-btn:hover{background:#2a62c9}
+.add-field-row{
+  display:flex;align-items:center;gap:8px;margin-top:16px;padding:10px;
+  border:1px dashed var(--border2);border-radius:8px;
+}
+.add-field-input{
+  flex:1;background:transparent;border:none;color:var(--text);
+  font-family:'Syne',sans-serif;font-size:0.82rem;outline:none;
+}
+.add-field-input::placeholder{color:var(--muted)}
+.add-field-btn{padding:4px 12px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;color:var(--muted2);font-size:0.72rem;font-family:'Syne',sans-serif;cursor:pointer}
+.add-field-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ── INBOX ── */
+.inbox-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.inbox-list{display:flex;flex-direction:column;gap:10px}
+.inbox-item{
+  display:flex;align-items:center;gap:14px;padding:14px 16px;
+  background:var(--surface);border:1px solid var(--border);border-radius:12px;
+  transition:border-color 0.15s;
+}
+.inbox-item:hover{border-color:var(--border2)}
+.inbox-item.archived{opacity:0.45}
+.file-ext-badge{
+  width:40px;height:40px;border-radius:8px;display:flex;align-items:center;
+  justify-content:center;font-size:0.62rem;font-family:'JetBrains Mono',monospace;
+  font-weight:700;flex-shrink:0;text-transform:uppercase;
+}
+.file-info{flex:1;min-width:0}
+.file-name{font-size:0.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.file-meta{font-size:0.68rem;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-top:3px}
+.file-cat-tag{font-size:0.68rem;padding:2px 8px;border-radius:10px;background:rgba(52,120,246,0.1);color:var(--accent);white-space:nowrap}
+.assign-btn{padding:5px 12px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;color:var(--muted2);font-size:0.72rem;font-family:'Syne',sans-serif;cursor:pointer;white-space:nowrap}
+.assign-btn:hover{border-color:var(--green);color:var(--green)}
+.archived-tag{font-size:0.68rem;padding:2px 8px;border-radius:10px;background:rgba(80,200,120,0.1);color:var(--green)}
+
+/* ── CHAT IMPORT ── */
+.chat-platforms{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin-bottom:32px}
+.platform-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:14px;
+  padding:20px 16px;cursor:pointer;transition:all 0.15s;text-align:center;
+}
+.platform-card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.platform-icon{font-size:2rem;margin-bottom:8px}
+.platform-name{font-size:0.88rem;font-weight:600}
+.platform-desc{font-size:0.7rem;color:var(--muted);margin-top:4px;line-height:1.5}
+.platform-status{font-size:0.65rem;font-family:'JetBrains Mono',monospace;margin-top:8px}
+.imported{color:var(--green)} .pending{color:var(--muted)}
+.chat-history{display:flex;flex-direction:column;gap:10px}
+.chat-import-item{
+  display:flex;align-items:center;gap:14px;padding:14px 16px;
+  background:var(--surface);border:1px solid var(--border);border-radius:12px;
+}
+.chat-import-info{flex:1}
+.chat-import-platform{font-size:0.88rem;font-weight:600}
+.chat-import-meta{font-size:0.7rem;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-top:3px}
+.chat-count{font-size:0.72rem;padding:2px 10px;border-radius:10px;background:rgba(139,92,246,0.1);color:var(--purple)}
+
+/* ── MODAL ── */
+.modal-bg{
+  position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;
+  display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);
+}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:28px;width:420px;max-width:90vw}
+.modal h3{font-size:1.1rem;font-weight:700;margin-bottom:20px}
+.modal-field{margin-bottom:14px}
+.modal-label{font-size:0.72rem;color:var(--muted);font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
+.modal-input{
+  width:100%;background:#0a0a14;border:1px solid var(--border);border-radius:8px;
+  padding:10px 12px;color:var(--text);font-family:'Syne',sans-serif;font-size:0.88rem;outline:none;
+}
+.modal-input:focus{border-color:var(--accent)}
+.modal-actions{display:flex;gap:10px;margin-top:20px;justify-content:flex-end}
+.modal-cancel{padding:8px 18px;background:transparent;border:1px solid var(--border2);border-radius:8px;color:var(--muted2);font-family:'Syne',sans-serif;font-size:0.82rem;cursor:pointer}
+.modal-confirm{padding:8px 18px;background:var(--accent);border:none;border-radius:8px;color:white;font-family:'Syne',sans-serif;font-size:0.82rem;cursor:pointer;font-weight:600}
+.emoji-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.emoji-opt{font-size:1.4rem;cursor:pointer;padding:4px;border-radius:6px;border:2px solid transparent;transition:all 0.1s}
+.emoji-opt:hover,.emoji-opt.selected{border-color:var(--accent);background:rgba(52,120,246,0.1)}
+
+/* ── ASSIGN MODAL ── */
+.assign-modal-list{max-height:260px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;margin-top:12px}
+.assign-opt{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:border-color 0.12s;font-size:0.85rem}
+.assign-opt:hover{border-color:var(--accent)}
+
+/* ── EMPTY ── */
+.empty{text-align:center;padding:60px 20px;color:var(--muted)}
+.empty-icon{font-size:3rem;margin-bottom:12px}
+.empty p{font-size:0.85rem;line-height:1.9}
+
+/* ── TOAST ── */
+.toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+  padding:10px 20px;border-radius:8px;color:white;font-size:0.82rem;
+  z-index:9999;animation:fadeUp 0.2s ease;white-space:nowrap;
+  box-shadow:0 4px 20px rgba(0,0,0,0.5);
+}
+@keyframes fadeUp{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+
+/* ── OVERALL BAR ── */
+.progress-strip{position:fixed;top:52px;left:0;right:0;height:2px;z-index:100}
+.progress-strip-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--purple));transition:width 0.8s ease}
+
+/* ── INBOX EXTRAS ── */
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner { width:14px; height:14px; border:2px solid #333; border-top-color:var(--purple); border-radius:50%; animation:spin 0.7s linear infinite; display:inline-block; }
+.btn-del { padding:5px 8px; background:transparent; border:1px solid transparent; border-radius:6px; color:var(--muted); font-size:0.75rem; cursor:pointer; transition:all 0.12s; }
+.btn-del:hover { border-color:var(--red); color:var(--red); }
+.confidence-tag { font-size:0.62rem; padding:1px 6px; border-radius:8px; }
+</style>
+</head>
+<body>
+
+<div class="titlebar">
+  <div class="logo">🛡️ <span>datame</span></div>
+  <div class="titlebar-pct">完整度 <strong id="total-pct">0%</strong></div>
+  <div class="titlebar-actions">
+    <button class="tbtn" onclick="showPage('inbox')">📥 收件箱 <span id="inbox-badge" style="display:none;background:var(--red);color:white;font-size:0.6rem;padding:1px 5px;border-radius:8px;margin-left:4px"></span></button>
+    <button class="tbtn" onclick="showPage('chats')">💬 导入聊天</button>
+    <button class="tbtn" id="scan-btn" onclick="scanFolder()">📂 扫描文件夹</button>
+    <button class="tbtn" onclick="showAddCategoryModal()">＋ 新建分类</button>
+  </div>
+</div>
+
+<div class="progress-strip"><div class="progress-strip-fill" id="progress-strip-fill" style="width:0%"></div></div>
+
+<div class="main">
+  <div class="sidebar" id="sidebar"></div>
+  <div class="content" id="content"></div>
+</div>
+
+<!-- Add Category Modal -->
+<div class="modal-bg" id="add-cat-modal" style="display:none">
+  <div class="modal">
+    <h3>➕ 新建自定义分类</h3>
+    <div class="modal-field">
+      <div class="modal-label">选择图标</div>
+      <div class="emoji-row" id="emoji-row"></div>
+    </div>
+    <div class="modal-field">
+      <div class="modal-label">分类名称</div>
+      <input class="modal-input" id="new-cat-name" placeholder="例如：旅行记录、宠物信息...">
+    </div>
+    <div class="modal-field">
+      <div class="modal-label">主题颜色</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px" id="color-row"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeModal('add-cat-modal')">取消</button>
+      <button class="modal-confirm" onclick="confirmAddCategory()">创建</button>
+    </div>
+  </div>
+</div>
+
+<!-- Assign Modal -->
+<div class="modal-bg" id="assign-modal" style="display:none">
+  <div class="modal">
+    <h3>📁 归档到分类</h3>
+    <div style="font-size:0.82rem;color:var(--muted);margin-bottom:4px" id="assign-file-name"></div>
+    <div class="assign-modal-list" id="assign-modal-list"></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeModal('assign-modal')">取消</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── STATE ──────────────────────────────────────────────────
+let vault = {};
+let currentPage = 'identity';
+let selectedEmoji = '📌';
+let selectedColor = '#3478f6';
+let assigningFile = null;
+const analyzingPaths = new Set();
+
+const EMOJIS = ['📌','🗂️','🌟','🎯','🔖','📎','🗒️','💡','🎪','🏆','🌈','🔮','🎭','🌊','🔥','💎','🎸','🌿','🏕️','🚀'];
+const COLORS = ['#3478f6','#50c878','#a855f7','#f5a623','#e74c3c','#ec4899','#06b6d4','#10b981','#f59e0b','#8b5cf6'];
+
+const PLATFORMS = [
+  { id:'wechat',   icon:'💚', name:'微信',     desc:'导入导出的HTML/TXT文件' },
+  { id:'whatsapp', icon:'📱', name:'WhatsApp', desc:'导出的 _chat.txt 文件' },
+  { id:'telegram', icon:'✈️', name:'Telegram', desc:'导出的 result.json 文件' },
+  { id:'chatgpt',  icon:'🤖', name:'ChatGPT',  desc:'导出的 conversations.json' },
+  { id:'claude',   icon:'🧡', name:'Claude',   desc:'导出的对话JSON文件' },
+  { id:'dingtalk', icon:'📎', name:'钉钉',     desc:'导出的HTML/CSV文件' },
+  { id:'feishu',   icon:'🪐', name:'飞书',     desc:'导出的JSON/CSV文件' },
+];
+
+const EXT_COLORS = {
+  '.pdf':['#e74c3c','#fff'],'.doc':['#2b579a','#fff'],'.docx':['#2b579a','#fff'],
+  '.jpg':['#f5a623','#fff'],'.jpeg':['#f5a623','#fff'],'.png':['#50c878','#fff'],
+  '.heic':['#50c878','#fff'],'.mp4':['#a855f7','#fff'],'.mov':['#a855f7','#fff'],
+  '.mp3':['#0ea5e9','#fff'],'.m4a':['#0ea5e9','#fff'],'.xls':['#217346','#fff'],
+  '.xlsx':['#217346','#fff'],'.csv':['#217346','#fff'],'.json':['#f59e0b','#000'],
+  '.html':['#e34c26','#fff'],'.zip':['#888','#fff'],'.txt':['#aaa','#333'],
+};
+
+// ── UTILS ──────────────────────────────────────────────────
+function scoreOf(fields) {
+  const vals = Object.values(fields||{});
+  if (!vals.length) return 0;
+  return Math.round(vals.filter(v=>v&&String(v).trim()).length/vals.length*100);
+}
+function pctColor(p){ return p>=60?'var(--green)':p>=30?'var(--orange)':'var(--red)' }
+function formatSize(b){ if(b<1024)return b+'B'; if(b<1048576)return(b/1024).toFixed(1)+'KB'; return(b/1048576).toFixed(1)+'MB' }
+
+function toast(msg, color='#50c878') {
+  document.querySelectorAll('.toast').forEach(t=>t.remove());
+  const t = document.createElement('div');
+  t.className='toast'; t.style.background=color; t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(), 2400);
+}
+
+function closeModal(id){ document.getElementById(id).style.display='none' }
+
+// ── SIDEBAR ───────────────────────────────────────────────
+function buildSidebar() {
+  const sb = document.getElementById('sidebar');
+  sb.innerHTML = '';
+
+  const allCats = { ...vault.categories, ...vault.customCategories };
+  let total=0, count=0;
+
+  // Built-in section
+  const section1 = document.createElement('div');
+  section1.className='sidebar-section'; section1.textContent='我的数据';
+  sb.appendChild(section1);
+
+  Object.entries(vault.categories||{}).forEach(([key,cat])=>{
+    const pct = key==='chats'
+      ? ((vault.chatImports||[]).length > 0 ? 100 : 0)
+      : key==='inbox' ? ((vault.inboxFiles||[]).filter(f=>f.status==='pending').length>0?50:0)
+      : scoreOf(cat.fields);
+    total+=pct; count++;
+    sb.appendChild(makeNavBtn(key, cat, pct));
+  });
+
+  // Custom section
+  if (Object.keys(vault.customCategories||{}).length > 0) {
+    const section2 = document.createElement('div');
+    section2.className='sidebar-section'; section2.textContent='自定义分类';
+    sb.appendChild(section2);
+    Object.entries(vault.customCategories||{}).forEach(([key,cat])=>{
+      const pct = scoreOf(cat.fields);
+      total+=pct; count++;
+      sb.appendChild(makeNavBtn(key, cat, pct, true));
+    });
+  }
+
+  // Add button
+  const addBtn = document.createElement('button');
+  addBtn.className='add-cat-btn';
+  addBtn.innerHTML='<span>＋</span> 新建分类';
+  addBtn.onclick = showAddCategoryModal;
+  sb.appendChild(addBtn);
+
+  // Total
+  const avg = count ? Math.round(total/count) : 0;
+  document.getElementById('total-pct').textContent = avg+'%';
+  document.getElementById('progress-strip-fill').style.width = avg+'%';
+
+  // Inbox badge
+  const pending = (vault.inboxFiles||[]).filter(f=>f.status==='pending').length;
+  const badge = document.getElementById('inbox-badge');
+  if (pending>0){ badge.style.display='inline'; badge.textContent=pending; }
+  else { badge.style.display='none'; }
+}
+
+function makeNavBtn(key, cat, pct, isCustom=false) {
+  const btn = document.createElement('button');
+  btn.className = 'nav-btn' + (key===currentPage?' active':'');
+
+  let rightEl = '';
+  if (key==='inbox') {
+    const pending = (vault.inboxFiles||[]).filter(f=>f.status==='pending').length;
+    rightEl = pending>0 ? `<span class="nav-badge">${pending}</span>` : '';
+  } else if (key==='chats') {
+    const cnt = (vault.chatImports||[]).length;
+    rightEl = cnt>0 ? `<span class="nav-badge" style="background:var(--purple)">${cnt}</span>` : '';
+  } else {
+    rightEl = `<span class="nav-pct" style="color:${pctColor(pct)}">${pct}%</span>`;
+  }
+
+  btn.innerHTML = `<span class="nav-icon">${cat.icon}</span><span class="nav-label">${cat.label}</span>${rightEl}`;
+  btn.onclick = () => showPage(key);
+  return btn;
+}
+
+// ── PAGES ─────────────────────────────────────────────────
+function showPage(key) {
+  currentPage = key;
+  buildSidebar();
+
+  const allCats = { ...vault.categories, ...vault.customCategories };
+  if (key==='inbox') { renderInbox(); return; }
+  if (key==='chats') { renderChats(); return; }
+
+  const cat = allCats[key];
+  if (!cat) return;
+  renderCategory(key, cat);
+}
+
+function renderCategory(key, cat) {
+  const pct = scoreOf(cat.fields);
+  const isCustom = !!(vault.customCategories||{})[key];
+
+  document.getElementById('content').innerHTML = `
+    <div class="page-header">
+      <span class="page-icon">${cat.icon}</span>
+      <div>
+        <div class="page-title">${cat.label}</div>
+      </div>
+      <span class="page-pct" style="color:${pctColor(pct)}">${pct}% 完整</span>
+      ${isCustom ? `<button class="tbtn" style="color:var(--red);border-color:var(--red)" onclick="deleteCustomCat('${key}')">删除分类</button>` : ''}
+    </div>
+    <div class="page-bar"><div class="page-bar-fill" style="width:${pct}%;background:${cat.color}"></div></div>
+    <div class="fields-grid" id="fields-grid-${key}"></div>
+    <div class="add-field-row" style="margin-top:16px">
+      <span style="color:var(--muted);font-size:0.85rem">＋</span>
+      <input class="add-field-input" id="new-field-input-${key}" placeholder="新增字段名称，按回车确认">
+      <button class="add-field-btn" onclick="addField('${key}')">添加</button>
+    </div>
+  `;
+
+  document.getElementById(`new-field-input-${key}`).addEventListener('keydown', e=>{
+    if(e.key==='Enter') addField(key);
+  });
+
+  const grid = document.getElementById(`fields-grid-${key}`);
+  Object.entries(cat.fields).forEach(([fieldName, value]) => {
+    grid.appendChild(makeFieldCard(key, fieldName, value));
+  });
+
+  if (Object.keys(cat.fields).length===0) {
+    grid.innerHTML = `<div style="color:var(--muted);font-size:0.85rem;padding:20px 0">还没有字段，在下方添加第一个</div>`;
+  }
+}
+
+function makeFieldCard(catKey, fieldName, value) {
+  const card = document.createElement('div');
+  card.className = 'field-card';
+  card.id = `card-${catKey}-${fieldName}`;
+  card.innerHTML = `
+    <div class="field-top">
+      <div class="lamp ${value?'on':'off'}" id="lamp-${catKey}-${fieldName}"></div>
+      <span class="field-label">${fieldName}</span>
+    </div>
+    <textarea class="field-input" placeholder="点击录入${fieldName}..." rows="2">${value||''}</textarea>
+    <div class="field-actions">
+      <button class="save-btn" onclick="saveField(this,'${catKey}','${fieldName}')">保存</button>
+    </div>
+  `;
+  return card;
+}
+
+async function saveField(btn, catKey, fieldName) {
+  const card = btn.closest('.field-card');
+  const value = card.querySelector('.field-input').value.trim();
+  await window.datame.saveField({ category: catKey, field: fieldName, value });
+
+  const allCats = { ...vault.categories, ...vault.customCategories };
+  if (allCats[catKey]) allCats[catKey].fields[fieldName] = value;
+
+  const lamp = document.getElementById(`lamp-${catKey}-${fieldName}`);
+  if (lamp) lamp.className = 'lamp '+(value?'on':'off');
+
+  buildSidebar();
+  toast('✅ 已保存');
+}
+
+async function addField(catKey) {
+  const input = document.getElementById(`new-field-input-${catKey}`);
+  const name = input.value.trim();
+  if (!name) return;
+  await window.datame.addCustomField({ category: catKey, fieldName: name });
+
+  vault = await window.datame.loadVault();
+  showPage(catKey);
+  toast('✅ 字段已添加');
+}
+
+// ── INBOX ─────────────────────────────────────────────────
+function renderInbox() {
+  const files = vault.inboxFiles || [];
+  const pending = files.filter(f=>f.status==='pending');
+  const archived = files.filter(f=>f.status==='archived');
+
+  document.getElementById('content').innerHTML = `
+    <div class="page-header">
+      <span class="page-icon">📥</span>
+      <div><div class="page-title">待分类收件箱</div></div>
+      <span class="page-pct">${pending.length} 待处理 · ${archived.length} 已归档</span>
+      <button class="tbtn" onclick="scanFolder()">📂 扫描文件夹</button>
+      ${pending.length>0 ? `<button class="tbtn primary" onclick="aiAutoImportAll()">🤖 AI 一键归档全部</button>` : ''}
+    </div>
+    <div class="page-bar"><div class="page-bar-fill" style="width:${archived.length&&files.length?Math.round(archived.length/files.length*100):0}%;background:#6366f1"></div></div>
+    ${files.length===0 ? `
+      <div class="empty">
+        <div class="empty-icon">📂</div>
+        <p>点击「扫描文件夹」<br>datame 会自动识别你硬盘里的文件<br>然后用 AI 一键分析并归档到正确分类</p>
+      </div>
+    ` : `
+      ${pending.length>0 ? `
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div style="font-size:0.75rem;color:var(--muted);font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:1px">待归档 (${pending.length})</div>
+          <button class="tbtn" style="font-size:0.72rem;padding:4px 12px" onclick="aiAnalyzePending()">🤖 AI 分析全部</button>
+        </div>
+      ` : ''}
+      <div class="inbox-list" id="inbox-pending-list">
+        ${pending.map(f=>inboxItemHTML(f)).join('')}
+      </div>
+      ${archived.length>0 ? `
+        <div style="font-size:0.75rem;color:var(--muted);font-family:'JetBrains Mono',monospace;margin:20px 0 12px;text-transform:uppercase;letter-spacing:1px">已归档 (${archived.length})</div>
+        <div class="inbox-list">${archived.map(f=>inboxItemHTML(f)).join('')}</div>
+      ` : ''}
+    `}
+  `;
+}
+
+function inboxItemHTML(f) {
+  const [bg,fg] = EXT_COLORS[f.ext]||['#333','#aaa'];
+  const ext = f.ext.replace('.','');
+  const ai = f.aiAnalysis;
+  const safeP = (f.path||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+  const safeN = (f.name||'').replace(/'/g,"\\'");
+  const isAnalyzing = analyzingPaths.has(f.path);
+
+  let confBadge = '';
+  if (ai?.confidence != null) {
+    const c = ai.confidence;
+    const [bg2,clr] = c>=70 ? ['rgba(80,200,120,0.15)','var(--green)'] : c>=40 ? ['rgba(245,166,35,0.15)','var(--orange)'] : ['rgba(231,76,60,0.15)','var(--red)'];
+    confBadge = `<span class="confidence-tag" style="background:${bg2};color:${clr}">${c}%</span>`;
+  }
+
+  return `
+    <div class="inbox-item ${f.status==='archived'?'archived':''}">
+      <div class="file-ext-badge" style="background:${bg};color:${fg}">${ext}</div>
+      <div class="file-info">
+        <div class="file-name">${f.name}</div>
+        <div class="file-meta">${formatSize(f.size||0)} · ${f.suggestedCategory||'未分类'}
+          ${ai ? `· <span style="color:var(--green)">AI: ${ai.summary||''}</span> ${confBadge}` : ''}
+        </div>
+        ${ai?.extractedFields && Object.keys(ai.extractedFields).length>0 ? `
+          <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px">
+            ${Object.entries(ai.extractedFields).slice(0,4).map(([k,v])=>
+              `<span style="font-size:0.65rem;padding:1px 7px;border-radius:8px;background:rgba(52,120,246,0.1);color:#7aa8f7">${k}: ${String(v).slice(0,20)}</span>`
+            ).join('')}
+          </div>
+        ` : ''}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;flex-shrink:0">
+        ${f.status==='archived'
+          ? `<span class="archived-tag">✓ 归档到 ${f.archivedTo}</span>
+             <button class="assign-btn" onclick="unarchiveItem('${safeP}')">撤回</button>`
+          : `
+            ${isAnalyzing
+              ? `<span class="spinner"></span>`
+              : !ai
+                ? `<button class="assign-btn" style="border-color:#8b5cf6;color:#8b5cf6" onclick="analyzeOne('${safeP}','${f.ext}','${safeN}')">🤖 AI分析</button>`
+                : ''
+            }
+            <button class="assign-btn" onclick="openAssignModal('${safeP}','${safeN}')">归档到分类</button>
+          `
+        }
+        <button class="btn-del" onclick="deleteInboxItem('${safeP}')" title="移除">🗑</button>
+      </div>
+    </div>
+  `;
+}
+
+async function analyzeOne(filePath, ext, fileName) {
+  analyzingPaths.add(filePath);
+  renderInbox();
+  try {
+    const result = await window.datame.aiAnalyze({ filePath, ext, fileName });
+    vault = await window.datame.loadVault();
+    if (result?.summary) toast(`✅ ${result.summary}`, '#50c878');
+    else toast('✅ AI 分析完成', '#50c878');
+  } catch(e) {
+    toast('❌ 分析失败：' + (e.message||'未知错误'), 'var(--red)');
+  } finally {
+    analyzingPaths.delete(filePath);
+    renderInbox();
+  }
+}
+
+async function aiAnalyzePending() {
+  const pending = (vault.inboxFiles||[]).filter(f=>f.status==='pending'&&!f.aiAnalysis);
+  if (!pending.length) { toast('没有待分析的文件'); return; }
+  for (let i = 0; i < pending.length; i++) {
+    const f = pending[i];
+    toast(`🤖 正在分析 ${i+1}/${pending.length}...`, '#8b5cf6');
+    analyzingPaths.add(f.path);
+    renderInbox();
+    try {
+      await window.datame.aiAnalyze({ filePath: f.path, ext: f.ext, fileName: f.name });
+    } catch(e) {}
+    analyzingPaths.delete(f.path);
+    vault = await window.datame.loadVault();
+    renderInbox();
+  }
+  toast('✅ 分析完成！', '#50c878');
+}
+
+async function aiAutoImportAll() {
+  const pending = (vault.inboxFiles||[]).filter(f=>f.status==='pending');
+  if (!pending.length) { toast('没有待归档的文件'); return; }
+  if (!confirm(`将分析并归档 ${pending.length} 个文件，继续？`)) return;
+  const strip = document.getElementById('progress-strip-fill');
+  let archivedCount = 0;
+  for (let i = 0; i < pending.length; i++) {
+    const f = pending[i];
+    strip.style.width = Math.round((i / pending.length) * 100) + '%';
+    strip.style.background = 'linear-gradient(90deg,var(--purple),var(--accent))';
+    toast(`🤖 处理 ${i+1}/${pending.length}...`, '#8b5cf6');
+    analyzingPaths.add(f.path);
+    renderInbox();
+    try {
+      const result = await window.datame.aiAnalyze({ filePath: f.path, ext: f.ext, fileName: f.name });
+      vault = await window.datame.loadVault();
+      if (result?.confidence >= 60 && result?.suggestedCategory && result.suggestedCategory !== 'inbox') {
+        await window.datame.inboxAssign({ filePath: f.path, category: result.suggestedCategory });
+        vault = await window.datame.loadVault();
+        archivedCount++;
+      }
+    } catch(e) {}
+    analyzingPaths.delete(f.path);
+    renderInbox();
+  }
+  strip.style.background = '';
+  buildSidebar();
+  renderInbox();
+  toast(`✅ 自动归档 ${archivedCount} 个，${pending.length - archivedCount} 个需手动处理`);
+}
+
+async function deleteInboxItem(filePath) {
+  await window.datame.inboxDelete({ filePath });
+  vault = await window.datame.loadVault();
+  buildSidebar();
+  renderInbox();
+  toast('已移除', '#555');
+}
+
+async function unarchiveItem(filePath) {
+  await window.datame.inboxUnarchive({ filePath });
+  vault = await window.datame.loadVault();
+  buildSidebar();
+  renderInbox();
+}
+
+function openAssignModal(filePath, fileName) {
+  assigningFile = filePath;
+  document.getElementById('assign-file-name').textContent = '📄 '+fileName;
+  const list = document.getElementById('assign-modal-list');
+  const allCats = { ...vault.categories, ...vault.customCategories };
+  list.innerHTML = Object.entries(allCats)
+    .filter(([k])=>k!=='inbox'&&k!=='chats')
+    .map(([key,cat])=>`
+      <div class="assign-opt" onclick="confirmAssign('${key}','${cat.label}')">
+        <span>${cat.icon}</span><span>${cat.label}</span>
+      </div>
+    `).join('');
+  document.getElementById('assign-modal').style.display='flex';
+}
+
+async function confirmAssign(catKey, catLabel) {
+  if (!assigningFile) return;
+  await window.datame.inboxAssign({ filePath: assigningFile, category: catKey });
+  vault = await window.datame.loadVault();
+  closeModal('assign-modal');
+  buildSidebar();
+  renderInbox();
+  toast(`✅ 已归档到「${catLabel}」`);
+}
+
+// ── CHATS ─────────────────────────────────────────────────
+function renderChats() {
+  const imports = vault.chatImports || [];
+
+  document.getElementById('content').innerHTML = `
+    <div class="page-header">
+      <span class="page-icon">💭</span>
+      <div><div class="page-title">聊天记录导入</div></div>
+      <span class="page-pct">${imports.length} 次导入</span>
+    </div>
+    <div style="font-size:0.75rem;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-bottom:16px;text-transform:uppercase;letter-spacing:1px">选择平台导入</div>
+    <div class="chat-platforms">
+      ${PLATFORMS.map(p=>{
+        const imported = imports.filter(i=>i.platform===p.id);
+        return `
+          <div class="platform-card" onclick="importChat('${p.id}')">
+            <div class="platform-icon">${p.icon}</div>
+            <div class="platform-name">${p.name}</div>
+            <div class="platform-desc">${p.desc}</div>
+            <div class="platform-status ${imported.length>0?'imported':'pending'}">
+              ${imported.length>0 ? `✓ 已导入 ${imported.reduce((s,i)=>s+(i.messageCount||0),0)} 条` : '点击导入'}
+            </div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+    ${imports.length>0 ? `
+      <div style="font-size:0.75rem;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-bottom:14px;text-transform:uppercase;letter-spacing:1px">导入历史</div>
+      <div class="chat-history">
+        ${imports.map(i=>`
+          <div class="chat-import-item">
+            <div class="platform-icon" style="font-size:1.5rem">${PLATFORMS.find(p=>p.id===i.platform)?.icon||'💬'}</div>
+            <div class="chat-import-info">
+              <div class="chat-import-platform">${PLATFORMS.find(p=>p.id===i.platform)?.name||i.platform}</div>
+              <div class="chat-import-meta">${new Date(i.importedAt).toLocaleString('zh')} · ${i.summary}</div>
+            </div>
+            <span class="chat-count">${i.messageCount||0} 条消息</span>
+          </div>
+        `).join('')}
+      </div>
+    ` : ''}
+  `;
+}
+
+async function importChat(platform) {
+  toast('📂 请选择导出文件...', '#3478f6');
+  const result = await window.datame.importChat({ platform });
+  if (!result) return;
+  vault = await window.datame.loadVault();
+  buildSidebar();
+  renderChats();
+  toast(`✅ ${PLATFORMS.find(p=>p.id===platform)?.name} 导入成功！${result.messages.length} 条消息`);
+}
+
+// ── SCAN FOLDER ───────────────────────────────────────────
+async function scanFolder() {
+  toast('📂 扫描中...', '#3478f6');
+  const files = await window.datame.scanFolder();
+  if (!files) return;
+  vault = await window.datame.loadVault();
+  buildSidebar();
+  showPage('inbox');
+  toast(`📂 发现 ${files.length} 个文件，已放入收件箱`);
+}
+
+// ── CUSTOM CATEGORY ───────────────────────────────────────
+function showAddCategoryModal() {
+  // Init emoji picker
+  const row = document.getElementById('emoji-row');
+  row.innerHTML = EMOJIS.map(e=>`
+    <span class="emoji-opt ${e===selectedEmoji?'selected':''}" onclick="selectEmoji('${e}')">${e}</span>
+  `).join('');
+
+  // Init color picker
+  const cr = document.getElementById('color-row');
+  cr.innerHTML = COLORS.map(c=>`
+    <div onclick="selectColor('${c}')" style="width:24px;height:24px;border-radius:50%;background:${c};cursor:pointer;border:2px solid ${c===selectedColor?'white':'transparent'};transition:border 0.1s" id="color-${c.replace('#','')}"></div>
+  `).join('');
+
+  document.getElementById('add-cat-modal').style.display='flex';
+  document.getElementById('new-cat-name').value='';
+}
+
+function selectEmoji(e) {
+  selectedEmoji = e;
+  document.querySelectorAll('.emoji-opt').forEach(el=>{
+    el.classList.toggle('selected', el.textContent===e);
+  });
+}
+function selectColor(c) {
+  selectedColor = c;
+  document.querySelectorAll('#color-row > div').forEach(el=>{
+    el.style.borderColor = el.style.background===c ? 'white' : 'transparent';
+  });
+}
+
+async function confirmAddCategory() {
+  const name = document.getElementById('new-cat-name').value.trim();
+  if (!name) { toast('请输入分类名称', '#e74c3c'); return; }
+  const id = 'custom_'+Date.now();
+  await window.datame.addCustomCategory({ id, icon:selectedEmoji, label:name, color:selectedColor });
+  vault = await window.datame.loadVault();
+  closeModal('add-cat-modal');
+  buildSidebar();
+  showPage(id);
+  toast(`✅ 「${name}」创建成功`);
+}
+
+async function deleteCustomCat(key) {
+  if (!confirm('确定删除这个分类吗？')) return;
+  await window.datame.deleteCustomCategory({ id:key });
+  vault = await window.datame.loadVault();
+  buildSidebar();
+  showPage('identity');
+  toast('已删除', '#e74c3c');
+}
+
+// ── INIT ──────────────────────────────────────────────────
+async function init() {
+  vault = await window.datame.loadVault();
+  buildSidebar();
+  showPage('identity');
+}
+init();
+</script>
+</body>
+</html>
